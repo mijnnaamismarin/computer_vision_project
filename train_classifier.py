@@ -30,25 +30,18 @@ def preprocess_image(image_path, input_shape):
 
 
 # Define paths for the people with masks and cars with masks datasets
-people_with_masks_dir = "people_splitted"
-cars_with_masks_dir = "cars_splitted"
+people_with_masks_dir = "data/processed_data/people"
+cars_with_masks_dir = "data/processed_data/cars"
 
 # Define the local root directory to store preprocessed images
-local_root = "/home/marin/Documents/University/CV/project/data_selection/data/"
-# data_root = "/home/marin/Documents/University/CV/project/SOBA_v2/SOBA/processed/"
-
-# # Create the local directories if they don't exist
-# local_people_dir = os.path.join(local_root, "people")
-# local_cars_dir = os.path.join(local_root, "cars")
-# os.makedirs(local_people_dir, exist_ok=True)
-# os.makedirs(local_cars_dir, exist_ok=True)
+local_root = "/home/marin/Documents/University/CV/project/data_selection/data"
 
 # Load all the people with masks (_s)
 # if file contains _s_
-people_with_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if '_s_' in file]
+people_with_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if '_s.' in file]
 
 # Load all the cars with masks (_c)
-cars_with_masks = [os.path.join(cars_with_masks_dir, file) for file in os.listdir(cars_with_masks_dir) if '_s_' in file]
+cars_with_masks = [os.path.join(cars_with_masks_dir, file) for file in os.listdir(cars_with_masks_dir) if '_s.' in file]
 
 # Create labels for the datasets (_s: 0, _c: 1)
 labels = [0] * len(people_with_masks) + [1] * len(cars_with_masks)
