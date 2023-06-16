@@ -4,6 +4,7 @@ from PIL import Image
 from tkinter import Tk, Label, BOTH, YES
 from PIL import ImageTk
 
+
 class ImageClassifier:
     def __init__(self, root, dirs, car_dest, people_dest):
         self.root = root
@@ -30,7 +31,7 @@ class ImageClassifier:
 
                 # check if file has three - symbols in it
                 b = file.split('-')
-        
+
                 if (file.endswith('.jpg') or file.endswith('.png')) and ('-' not in file[-6:] or len(b) <= 3):
                     images.append(os.path.join(dir, file))
         print(f"images: {len(images)}")
@@ -38,7 +39,7 @@ class ImageClassifier:
 
     def load_next_image(self):
         print(f"Images left: {len(self.images)}")
-        
+
         if self.images:
             try:
                 self.current_image = self.images.pop(0)
@@ -54,7 +55,7 @@ class ImageClassifier:
 
     def move_car(self, event):
         self.move_image(self.car_dest)
-        
+
     def move_people(self, event):
         self.move_image(self.people_dest)
 
@@ -77,6 +78,7 @@ class ImageClassifier:
                 os.remove(os.path.join(dir, file))
 
         self.load_next_image()
+
 
 root = Tk()
 base_dir = '/home/marin/Documents/University/CV/project/SOBA_v2/SOBA/SOBA/'

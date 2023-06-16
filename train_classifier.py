@@ -11,22 +11,18 @@ from keras.callbacks import EarlyStopping
 from keras.preprocessing.image import ImageDataGenerator
 from keras import regularizers
 
+
 def preprocess_image(image_path, input_shape):
     # Load the image
     img = Image.open(image_path).convert("L")  # Convert image to grayscale
-    
     # Resize the image to the desired input shape
     img = img.resize((input_shape[0], input_shape[1]))  # Double the size
-    
     # Convert the image to a numpy array
     img_array = np.array(img)
-    
     # Normalize pixel values between 0 and 1
     img_array = img_array / 255.0
-    
     # Return the preprocessed image data
     return img_array
-
 
 
 # Define paths for the people with masks and cars with masks datasets
@@ -45,7 +41,8 @@ local_root = "/home/marin/Documents/University/CV/project/data_selection/data/"
 
 # Load all the people with masks (_s)
 # if file contains _s_
-people_with_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if '_s_' in file]
+people_with_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if
+                     '_s_' in file]
 
 # Load all the cars with masks (_c)
 cars_with_masks = [os.path.join(cars_with_masks_dir, file) for file in os.listdir(cars_with_masks_dir) if '_s_' in file]
@@ -71,7 +68,7 @@ for image_path in X_train:
     Image.fromarray((preprocessed_image * 255).astype(np.uint8)).save(local_path)
     preprocessed_image = preprocessed_image.reshape(*preprocessed_image.shape, 1)
     X_train_processed.append(preprocessed_image)
-    
+
 X_train_processed = np.array(X_train_processed)
 y_train_processed = np.array(y_train)
 
@@ -84,7 +81,6 @@ for image_path in X_test:
     Image.fromarray((preprocessed_image * 255).astype(np.uint8)).save(local_path)
     preprocessed_image = preprocessed_image.reshape(*preprocessed_image.shape, 1)
     X_test_processed.append(preprocessed_image)
-    
 X_test_processed = np.array(X_test_processed)
 y_test_processed = np.array(y_test)
 
@@ -128,8 +124,8 @@ else:
     # Train the model
     # model.fit(X_train_processed, y_train_processed, batch_size=32, epochs=25, callbacks=[early_stopping])   
     model.fit(datagen.flow(X_train_processed, y_train_processed, batch_size=32),
-          validation_data=(X_test_processed, y_test_processed), 
-          steps_per_epoch=len(X_train_processed) // 32, epochs=25, callbacks=[early_stopping])
+              validation_data=(X_test_processed, y_test_processed),
+              steps_per_epoch=len(X_train_processed) // 32, epochs=25, callbacks=[early_stopping])
     # Save the trained model
     model.save(model_path)
 
@@ -138,7 +134,6 @@ y_pred = model.predict(X_test_processed)
 
 # Convert the predictions to binary values <0.5 is 0 and >=0.5 is 1>
 y_pred = np.where(y_pred < 0.5, 0, 1)
-
 
 accuracy = accuracy_score(y_test_processed, y_pred)
 print("Accuracy:", accuracy)

@@ -1,0 +1,7 @@
+tensorflow
+keras
+numpy
+tqdm
+Pillow==9.5.0
+opencv-python
+scikit-learn

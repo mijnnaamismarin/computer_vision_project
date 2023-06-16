@@ -1,5 +1,5 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Input, Dense, Reshape, Flatten
@@ -13,8 +13,11 @@ import numpy as np
 from keras.utils import img_to_array, load_img
 from tqdm import tqdm
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 print("Built with CUDA: ", tf.test.is_built_with_cuda())
 print("GPU Available: ", tf.test.is_gpu_available())
+
 
 # Load the images
 def load_images(image_paths, image_size):
@@ -26,6 +29,7 @@ def load_images(image_paths, image_size):
         images.append(img)
     return np.array(images)
 
+
 # Define image size
 image_size = (64, 64)
 
@@ -35,15 +39,16 @@ people_with_masks_dir = "/home/marin/Documents/University/CV/project/SOBA_v2/SOB
 # Define the local root directory to store preprocessed images
 local_root = "/home/marin/Documents/University/CV/project/data_selection/data_gan/"
 
-shadow_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if '_s_' in file]
-object_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if '_o_' in file]
+shadow_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if
+                '_s_' in file]
+object_masks = [os.path.join(people_with_masks_dir, file) for file in os.listdir(people_with_masks_dir) if
+                '_o_' in file]
 
 # Load and preprocess images
 shadow_images = load_images(shadow_masks, image_size)
 object_images = load_images(object_masks, image_size)
 
-
-# PROPERLY PREPROCESS THE DATA 
+# PROPERLY PREPROCESS THE DATA
 
 # Let's assume that your shadows and objects are 64x64 grayscale images
 img_rows = 64
@@ -52,11 +57,10 @@ channels = 1
 img_shape = (img_rows, img_cols, channels)
 
 
-
 # Generator
 def build_generator():
     noise_shape = (100,)
-    
+
     model = Sequential()
 
     model.add(Dense(256, input_shape=noise_shape))
@@ -75,6 +79,7 @@ def build_generator():
     img = model(noise)
 
     return Model(noise, img)
+
 
 # Discriminator
 def build_discriminator():
@@ -96,10 +101,11 @@ def build_discriminator():
 
     return Model(img, validity)
 
+
 # Building and compiling the discriminator
 discriminator = build_discriminator()
-discriminator.compile(loss='binary_crossentropy', 
-                      optimizer=Adam(0.0002, 0.5), 
+discriminator.compile(loss='binary_crossentropy',
+                      optimizer=Adam(0.0002, 0.5),
                       metrics=['accuracy'])
 
 # Build and compile the generator
@@ -133,7 +139,7 @@ for epoch in tqdm(range(epochs)):
     # Train Discriminator
     idx = np.random.randint(0, object_images.shape[0], batch_size)
     real_imgs = object_images[idx]
-    
+
     noise = np.random.normal(0, 1, (batch_size, 100))
 
     # Generate a batch of new images
@@ -149,7 +155,7 @@ for epoch in tqdm(range(epochs)):
 
     # If at save interval => save generated image samples and models
     if epoch % 2000 == 0:
-        print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
+        print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100 * d_loss[1], g_loss))
 
 # Save final models
 generator.save('gan_generator.h5')
