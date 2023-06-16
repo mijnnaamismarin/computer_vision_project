@@ -13,8 +13,9 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras.applications import VGG16
-
-
+from imblearn.over_sampling import RandomOverSampler
+from keras.preprocessing.image import ImageDataGenerator
+from matplotlib import pyplot as plt
 def preprocess_image(image_path, input_shape, threshold=128):
     # Load the image
     img = Image.open(image_path).convert("L")  # Convert image to grayscale
@@ -82,7 +83,7 @@ if os.path.exists(local_train_root) and os.path.exists(local_test_root):
     y_train_processed = np.where(y_train_processed == "c", 1, 0)
     y_test_processed = np.where(y_test_processed == "c", 1, 0)
 
-else:
+else: # This entire else statement is not needed if you load the data properly. It just preprocesses data which comes from the sort_label.py
     # Create directories if they do not exist
     os.makedirs(local_train_root, exist_ok=True)
     os.makedirs(local_test_root, exist_ok=True)
@@ -144,36 +145,109 @@ if os.path.exists(model_path) and not force_train:
     # Load the saved model
     model = load_model(model_path)
 else:
+    early_stopping = EarlyStopping(monitor='accuracy', patience=10)
 
-    datagen = ImageDataGenerator(
-        rotation_range=20,
-        zoom_range=0.15,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.15,
-        horizontal_flip=True,
-        fill_mode="nearest")
-    datagen.fit(X_train_processed)
+    # Create a simple CNN model
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=input_shape))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.25))  # Dropout layer after the first Conv2D layer
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.25))  # Dropout layer after the second Conv2D layer
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.25))  # Dropout layer after the third Conv2D layer
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))  # Dropout layer after the Dense layer
+    model.add(Dense(1, activation='sigmoid'))
 
-    early_stopping = EarlyStopping(monitor='accuracy', patience=2)
-
-    # Create a modified VGG16 model for grayscale images
-    baseModel = VGG16(weights="imagenet", include_top=False, input_shape=input_shape)
-    inputs = Input(shape=input_shape)
-    x = baseModel(inputs)
-    x = Flatten()(x)
-    x = Dense(128, activation='relu')(x)
-    x = Dropout(0.5)(x)
-    outputs = Dense(1, activation='sigmoid')(x)
-    model = Model(inputs=inputs, outputs=outputs)
 
     # Compile the model
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-    # Train the model
-    model.fit(datagen.flow(X_train_processed, y_train_processed, batch_size=32),
-              validation_data=(X_test_processed, y_test_processed),
-              steps_per_epoch=len(X_train_processed) // 32, epochs=25, callbacks=[early_stopping])
+    
+    # Create an instance of RandomOverSampler
+    ros = RandomOverSampler()
+
+    # Reshape the input data for oversampling
+    X_train_reshaped = X_train_processed.reshape(X_train_processed.shape[0], -1)
+
+    # Perform random oversampling on the reshaped data
+    X_train_oversampled, y_train_oversampled = ros.fit_resample(X_train_reshaped, y_train_processed)
+
+    # Reshape the oversampled data back to the original image shape
+    X_train_oversampled = X_train_oversampled.reshape(X_train_oversampled.shape[0], *input_shape)
+
+    # Create an ImageDataGenerator for augmentation
+    datagen = ImageDataGenerator(
+        rotation_range=5,
+        zoom_range=0.025,
+        width_shift_range=0.05,
+        height_shift_range=0.05,
+        shear_range=0.025,
+        horizontal_flip=True,
+        fill_mode="nearest")
+
+    # Fit the ImageDataGenerator on the augmented data
+    datagen.fit(X_train_oversampled)
+
+    # Create a new list to store the augmented samples
+    augmented_images = []
+
+    # Generate augmented samples using the ImageDataGenerator
+    for image in X_train_oversampled:
+        batch = np.expand_dims(image, axis=0)
+        aug_iter = datagen.flow(batch, batch_size=1)
+        augmented_image = next(aug_iter)[0]
+        augmented_images.append(augmented_image)
+
+    # show 3 augmented images and 3 original images
+    for i in range(3):
+        plt.figure(figsize=(10, 10))
+        plt.subplot(3, 3, i + 1)
+        plt.imshow(X_train_oversampled[i])
+        plt.axis("off")
+        plt.subplot(3, 3, i + 4)
+        plt.imshow(augmented_images[i])
+        plt.axis("off")
+    plt.show()
+
+
+
+
+    # Convert the augmented images to a numpy array
+    X_train_augmented = np.array(augmented_images)
+
+    # Concatenate the augmented samples with the original data
+    X_train_final = np.concatenate((X_train_processed, X_train_augmented))
+    y_train_final = np.concatenate((y_train_processed, y_train_oversampled))
+
+    # Shuffle the data
+    indices = np.random.permutation(len(X_train_final))
+    X_train_final = X_train_final[indices]
+    y_train_final = y_train_final[indices]
+    
+    # # Perform data augmentation and oversampling for the underrepresented class
+    datagen = ImageDataGenerator(
+        rotation_range=10,
+        zoom_range=0.05,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        shear_range=0.05,
+        horizontal_flip=True,
+        fill_mode="nearest")
+    
+    # model.fit(X_train_final, y_train_final, epochs=200, callbacks=[early_stopping], validation_data=(X_test_processed, y_test_processed))
+    # Fit the model with augmented and oversampled data
+    model.fit_generator(
+        datagen.flow(X_train_final, y_train_final, batch_size=32),
+        steps_per_epoch=len(X_train_oversampled) // 32,
+        epochs=200,
+        callbacks=[early_stopping],
+        validation_data=(X_test_processed, y_test_processed)
+    )
 
     # Save the trained model
     model.save(model_path)
