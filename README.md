@@ -1,12 +1,18 @@
-This repository contains the project materials for the Computer Vision Seminar course at TU Delft. The primary goal of this project was to establish a machine learning pipeline that can accurately classify shadows of people and cars, based on the manual preprocessing of the SOBA dataset.
-Repository Structure
+# Exploring Shadows for Object Classification in Computer Vision
+> CS4245 - Seminar Computer Vision by Deep Learning - Group 10
+### Information
+Marin Vogel & Remy Duijsens 
+
+Link to the dataset: [Google Drive](https://drive.google.com/drive/folders/1Gd-Wk5CjbFHfx3B0cly2wi4j6ToFWUch?usp=sharing)
+
+## Repository Structure
 
 The repository consists of the following python files:
 
     sort_label.py - Python script for manual preprocessing of the SOBA_v2 dataset.
     train_classifier.py - Python script for loading in the dataset and training a machine learning model.
 
-Dataset
+## Dataset
 
 The dataset used for this project is the SOBA_classification dataset, which can be accessed through the following link.
 
