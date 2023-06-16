@@ -1,0 +1,6 @@
+
+*.png
+*.zip
+# add folder path_to_save_model to .gitignore
+path_to_save_model/
+```
