@@ -16,6 +16,7 @@ from keras.applications import VGG16
 from imblearn.over_sampling import RandomOverSampler
 from keras.preprocessing.image import ImageDataGenerator
 from matplotlib import pyplot as plt
+
 def preprocess_image(image_path, input_shape, threshold=128):
     # Load the image
     img = Image.open(image_path).convert("L")  # Convert image to grayscale
@@ -151,13 +152,13 @@ else:
     model = Sequential()
     model.add(Conv2D(32, (3, 3), activation='relu', input_shape=input_shape))
     model.add(MaxPooling2D((2, 2)))
-    model.add(Dropout(0.25))  # Dropout layer after the first Conv2D layer
+    # model.add(Dropout(0.25))  # Dropout layer after the first Conv2D layer
     model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2, 2)))
-    model.add(Dropout(0.25))  # Dropout layer after the second Conv2D layer
+    # model.add(Dropout(0.25))  # Dropout layer after the second Conv2D layer
     model.add(Conv2D(128, (3, 3), activation='relu'))
     model.add(MaxPooling2D((2, 2)))
-    model.add(Dropout(0.25))  # Dropout layer after the third Conv2D layer
+    # model.add(Dropout(0.25))  # Dropout layer after the third Conv2D layer
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.5))  # Dropout layer after the Dense layer
@@ -203,20 +204,6 @@ else:
         augmented_image = next(aug_iter)[0]
         augmented_images.append(augmented_image)
 
-    # show 3 augmented images and 3 original images
-    for i in range(3):
-        plt.figure(figsize=(10, 10))
-        plt.subplot(3, 3, i + 1)
-        plt.imshow(X_train_oversampled[i])
-        plt.axis("off")
-        plt.subplot(3, 3, i + 4)
-        plt.imshow(augmented_images[i])
-        plt.axis("off")
-    plt.show()
-
-
-
-
     # Convert the augmented images to a numpy array
     X_train_augmented = np.array(augmented_images)
 
@@ -244,7 +231,7 @@ else:
     model.fit_generator(
         datagen.flow(X_train_final, y_train_final, batch_size=32),
         steps_per_epoch=len(X_train_oversampled) // 32,
-        epochs=200,
+        epochs=100,
         callbacks=[early_stopping],
         validation_data=(X_test_processed, y_test_processed)
     )
